@@ -1,10 +1,15 @@
 package io.security.basicsecurity;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -15,32 +20,13 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests(req -> req.anyRequest().authenticated())
-
-                //.formLogin(AbstractAuthenticationFilterConfigurer::permitAll);
                 .formLogin(form -> form
                         //.loginPage("/loginPage")
                         .defaultSuccessUrl("/")
-                        .failureUrl("/loginPage")
+                        .failureUrl("/login")
                         .usernameParameter("userId")
                         .passwordParameter("passwd")
                         .loginProcessingUrl("/login_proc")
-                        /* 강의 버전 Handler (람다 이전)
-                        .successHandler(new AuthenticationSuccessHandler() {
-                            @Override
-                            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-                                System.out.println("authentication : " + authentication.getName());
-                                response.sendRedirect("/");
-                            }
-                        })
-                        .failureHandler(new AuthenticationFailureHandler() {
-                            @Override
-                            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-                                System.out.println("exception : " + exception.getMessage());
-                                response.sendRedirect("/loginPage");
-                            }
-                        })
-                        */
-                        /* 람다 사용한 버전 */
                         .successHandler((request, response, authentication) -> {
                             //인증에 성공한 사용자 이름
                             System.out.println("authentication : " + authentication.getName());
@@ -50,7 +36,19 @@ public class SecurityConfig {
                             System.out.println("exception : " + exception.getMessage());
                             response.sendRedirect("/loginPage");
                         })
-                        .permitAll());
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")       //로그아웃은 POST방식으로 진행해야 함
+                        .logoutSuccessUrl("/login") //성공하면 다시 login 페이지로 넘어감
+                        .deleteCookies("remember-me")            //삭제할 쿠키 명 적어주기 :: remember-me 쿠키 삭제하기
+                        .addLogoutHandler((request, response, authentication) -> {
+                            HttpSession session = request.getSession();
+                            session.invalidate();
+                        })
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.sendRedirect("/login");
+                        })
+                );
 
 
         return http.getOrBuild();
