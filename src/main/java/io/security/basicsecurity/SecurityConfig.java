@@ -3,17 +3,22 @@ package io.security.basicsecurity;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Autowired
+    UserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -48,7 +53,14 @@ public class SecurityConfig {
                         .logoutSuccessHandler((request, response, authentication) -> {
                             response.sendRedirect("/login");
                         })
-                );
+                )
+                .rememberMe(rememberMe -> rememberMe
+                        .alwaysRemember(false)              //서버 기동할때마다 항상 기능을 활성화 할 것인지?
+                        .rememberMeParameter("remember")    //기본 파라미터는 remember-me
+                        .tokenValiditySeconds(3600)         //default는 14일
+                        .userDetailsService(userDetailsService))//필수로 설정!!
+                                                                // rememberMe 기능을 수행할 때, 사용자 계정을 조회할 때 쓰는 서비스
+        ;
 
 
         return http.getOrBuild();
