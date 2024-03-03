@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
@@ -60,6 +62,28 @@ public class SecurityConfig {
                         .tokenValiditySeconds(3600)         //default는 14일
                         .userDetailsService(userDetailsService))//필수로 설정!!
                                                                 // rememberMe 기능을 수행할 때, 사용자 계정을 조회할 때 쓰는 서비스
+
+                .sessionManagement(session -> session       //동시 세션 제어 기능
+                        .maximumSessions(1)                 //최대 세션 허용개수, -1이면 무제한
+                        .maxSessionsPreventsLogin(true)     //true : 나중 사용자 로그인 막기, false : 처음 사용자 세션 종료
+                        .expiredUrl("/login")               //세션이 만료된 경우 이동할 페이지
+                )
+                .sessionManagement((session) -> session     //세션 고정 공격으로부터 보호
+                        .sessionFixation().changeSessionId()//새로 인증할 때마다 세션 아이디 변경
+
+                        // 중요 :: 세션 생성 규칙 설정
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)       //필요시 생성(기본값)
+                        /*
+                        .sessionCreationPolicy(SessionCreationPolicy.ALWAYS)            //항상 세션 생성
+                        .sessionCreationPolicy(SessionCreationPolicy.NEVER)             //생성하지는 않지만, 이미 존재하면 사용
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)         //  생성하지도 않고, 존재해도 사용안함
+                                                                                        //   JWT 인증 방식 사용시 statless로 설정
+                        */
+
+                )
+
+
+
         ;
 
 
