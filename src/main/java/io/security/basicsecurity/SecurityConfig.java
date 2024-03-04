@@ -1,32 +1,30 @@
 package io.security.basicsecurity;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    UserDetailsService userDetailsService;
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .authorizeHttpRequests(req -> req.anyRequest().authenticated())
                 .formLogin(form -> form
                         //.loginPage("/loginPage")
                         .defaultSuccessUrl("/")
@@ -56,12 +54,6 @@ public class SecurityConfig {
                             response.sendRedirect("/login");
                         })
                 )
-                .rememberMe(rememberMe -> rememberMe
-                        .alwaysRemember(false)              //서버 기동할때마다 항상 기능을 활성화 할 것인지?
-                        .rememberMeParameter("remember")    //기본 파라미터는 remember-me
-                        .tokenValiditySeconds(3600)         //default는 14일
-                        .userDetailsService(userDetailsService))//필수로 설정!!
-                                                                // rememberMe 기능을 수행할 때, 사용자 계정을 조회할 때 쓰는 서비스
 
                 .sessionManagement(session -> session       //동시 세션 제어 기능
                         .maximumSessions(1)                 //최대 세션 허용개수, -1이면 무제한
@@ -79,14 +71,30 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)         //  생성하지도 않고, 존재해도 사용안함
                                                                                         //   JWT 인증 방식 사용시 statless로 설정
                         */
-
                 )
-
-
-
-        ;
-
-
+                
+                // 운영 서비스 할 때 적합한 방식은 아님
+                // 즉각적이고 동적 권한 관리는 따로 지정해 줘야 함
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/user").hasRole("USER")
+                        .requestMatchers("/admin/pay").hasRole("ADMIN")                     //상세 권한 허가 문구가 더 위쪽에 위치해야 함 
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SYS")     // 더 포괄적인 url이 더 아래쪽으로 위치
+                );
         return http.getOrBuild();
     }
+
+    @Primary
+    @Bean
+    public AuthenticationManagerBuilder configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        //임시 inMemory 테스트 유저 추가
+        auth.inMemoryAuthentication()
+                .withUser("user").password(passwordEncoder().encode("1111")).roles("USER")
+                .and()
+                .withUser("sys").password(passwordEncoder().encode("1111")).roles("SYS")
+                .and()
+                .withUser("admin").password(passwordEncoder().encode("1111")).roles("ADMIN", "SYS", "USER");
+
+        return auth;
+    }
+
 }
