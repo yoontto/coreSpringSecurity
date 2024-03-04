@@ -83,6 +83,8 @@ public class SecurityConfig {
         return http.getOrBuild();
     }
 
+    //UserDetailService 순환참조 에러
+    //AuthenticationManagerBuilder에서 UserDetailService 참조하고 있기 때문에, 이 파일에서는 참조하면 안됨
     @Primary
     @Bean
     public AuthenticationManagerBuilder configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
