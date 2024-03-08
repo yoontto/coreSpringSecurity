@@ -79,7 +79,13 @@ public class SecurityConfig {
                         .requestMatchers("/user").hasRole("USER")
                         .requestMatchers("/admin/pay").hasRole("ADMIN")                     //상세 권한 허가 문구가 더 위쪽에 위치해야 함 
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SYS")     // 더 포괄적인 url이 더 아래쪽으로 위치
-                );
+                )
+
+                //csrf 필터는 default값이라서 따로 설정하지 않아도 작동함
+                //disable 할때는 지정 필요
+                //.csrf().disable()
+                .csrf()
+        ;
         return http.getOrBuild();
     }
 
