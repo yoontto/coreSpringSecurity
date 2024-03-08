@@ -8,9 +8,16 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
+
+import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity
@@ -36,6 +43,13 @@ public class SecurityConfig {
                             //인증에 성공한 사용자 이름
                             System.out.println("authentication : " + authentication.getName());
                             response.sendRedirect("/");
+
+                            //exception 시, 캐싱 처리 확인하기 위해 코드 추가
+                            RequestCache requestCache = new HttpSessionRequestCache();
+                            SavedRequest savedRequest = requestCache.getRequest(request, response); //사용자가 원래 요청했던 정보
+                            String redirectUrl = savedRequest.getRedirectUrl();
+                            response.sendRedirect(redirectUrl);
+
                         })
                         .failureHandler((request, response, exception) -> {
                             System.out.println("exception : " + exception.getMessage());
@@ -79,12 +93,26 @@ public class SecurityConfig {
                         .requestMatchers("/user").hasRole("USER")
                         .requestMatchers("/admin/pay").hasRole("ADMIN")                     //상세 권한 허가 문구가 더 위쪽에 위치해야 함 
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SYS")     // 더 포괄적인 url이 더 아래쪽으로 위치
+                        // 예외처리 예제 확인할 때, 인증 안된 사용자 redirect 할 수 있도록 permitAll 처리함
+                        .requestMatchers("/login").permitAll()
                 )
+
+                //exception 처리
+                //FilterSecurityInterceptor 에서 처리
+                .exceptionHandling()
+                .authenticationEntryPoint((request, response, authException) -> {
+                    //commence 메소드
+                    response.sendRedirect("/login");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    //세션에 원래 가고자했던 자원의 정보가 남아있음
+                    //handle 메소드
+                    response.sendRedirect("/denied");
+                })
 
                 //csrf 필터는 default값이라서 따로 설정하지 않아도 작동함
                 //disable 할때는 지정 필요
                 //.csrf().disable()
-                .csrf()
         ;
         return http.getOrBuild();
     }
