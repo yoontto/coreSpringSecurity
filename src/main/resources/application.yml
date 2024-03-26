@@ -1,5 +1,26 @@
 spring:
-  security:
-    user:
-      name: user
-      password: 1111
+  datasource:
+    url: jdbc:postgresql://localhost:5432/springboot
+    username: postgres
+    password: qwer4321!
+  jpa:
+    hibernate:
+      ddl-auto: create
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+
+  thymeleaf:
+    cache: false
+
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: true
+
+  main:
+    allow-bean-definition-overriding: true
+
