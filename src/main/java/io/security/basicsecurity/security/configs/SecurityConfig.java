@@ -1,4 +1,4 @@
-package io.security.basicsecurity;
+package io.security.basicsecurity.security.configs;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Bean;
@@ -51,7 +51,8 @@ public class SecurityConfig {
                             System.out.println("exception : " + exception.getMessage());
                             response.sendRedirect("/loginPage");
                         })
-                        .permitAll())
+                        .permitAll()
+                )
                 .logout(logout -> logout
                         .logoutUrl("/logout")       //로그아웃은 POST방식으로 진행해야 함
                         .logoutSuccessUrl("/login") //성공하면 다시 login 페이지로 넘어감
@@ -82,16 +83,19 @@ public class SecurityConfig {
                                                                                         //   JWT 인증 방식 사용시 statless로 설정
                         */
                 )
-                
+
                 // 운영 서비스 할 때 적합한 방식은 아님
                 // 즉각적이고 동적 권한 관리는 따로 지정해 줘야 함
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/user").hasRole("USER")
-                        .requestMatchers("/admin/pay").hasRole("ADMIN")                     //상세 권한 허가 문구가 더 위쪽에 위치해야 함 
+                        .requestMatchers("/admin/pay").hasRole("ADMIN")                     //상세 권한 허가 문구가 더 위쪽에 위치해야 함
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SYS")     // 더 포괄적인 url이 더 아래쪽으로 위치
                         // 예외처리 예제 확인할 때, 인증 안된 사용자 redirect 할 수 있도록 permitAll 처리함
                         .requestMatchers("/login").permitAll()
+                        .requestMatchers("/", "/users").permitAll()
                 )
+
+
 
                 //exception 처리
                 //FilterSecurityInterceptor 에서 처리

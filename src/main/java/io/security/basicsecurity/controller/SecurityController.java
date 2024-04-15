@@ -1,4 +1,4 @@
-package io.security.basicsecurity;
+package io.security.basicsecurity.controller;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.Authentication;
@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SecurityController {
 
-    @GetMapping("/")
+    @GetMapping("/index")
     public String index(HttpSession session) {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        SecurityContext context = (SecurityContext) session.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
-        Authentication authentication1 = context.getAuthentication();
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        SecurityContext context = (SecurityContext) session.getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+//        Authentication authentication1 = context.getAuthentication();
 
         return "home";
     }

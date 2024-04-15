@@ -1,5 +1,28 @@
 spring:
-  security:
-    user:
-      name: user
-      password: 1111
+  datasource:
+    url: jdbc:mariadb://localhost:3307/socialLogin
+    username: root
+    password: qwer4321!
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+      database-platform: org.hibernate.dialect.PostgreSQLDialect
+      properties:
+        hibernate:
+          format_sql: true
+          show_sql: true
+          jdbc:
+            lob:
+              non_contextual_creation: true
+
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: true
+
+  main:
+    allow-bean-definition-overriding: true
+  thymeleaf:
+    cache: false
