@@ -1,13 +1,22 @@
 package io.security.basicsecurity.security.configs;
 
+import io.security.basicsecurity.repository.UserRepository;
+import io.security.basicsecurity.security.service.CustomUserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -16,10 +25,12 @@ import org.springframework.security.web.savedrequest.SavedRequest;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    /*@Bean
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }*/
+    }
+
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -29,29 +40,10 @@ public class SecurityConfig {
 
         http
                 .formLogin(form -> form
-                        //.loginPage("/loginPage")
+                        .loginPage("/login")
                         .defaultSuccessUrl("/")
                         .failureUrl("/login")
-                        .usernameParameter("userId")
-                        .passwordParameter("passwd")
-                        .loginProcessingUrl("/login_proc")
-                        .successHandler((request, response, authentication) -> {
-                            //인증에 성공한 사용자 이름
-                            System.out.println("authentication : " + authentication.getName());
-                            response.sendRedirect("/");
-
-                            //exception 시, 캐싱 처리 확인하기 위해 코드 추가
-                            RequestCache requestCache = new HttpSessionRequestCache();
-                            SavedRequest savedRequest = requestCache.getRequest(request, response); //사용자가 원래 요청했던 정보
-                            String redirectUrl = savedRequest.getRedirectUrl();
-                            response.sendRedirect(redirectUrl);
-
-                        })
-                        .failureHandler((request, response, exception) -> {
-                            System.out.println("exception : " + exception.getMessage());
-                            response.sendRedirect("/loginPage");
-                        })
-                        .permitAll()
+                        //.loginProcessingUrl("/login_proc")
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")       //로그아웃은 POST방식으로 진행해야 함
@@ -94,43 +86,10 @@ public class SecurityConfig {
                         .requestMatchers("/login").permitAll()
                         .requestMatchers("/", "/users").permitAll()
                 )
-
-
-
-                //exception 처리
-                //FilterSecurityInterceptor 에서 처리
-                .exceptionHandling()
-                .authenticationEntryPoint((request, response, authException) -> {
-                    //commence 메소드
-                    response.sendRedirect("/login");
-                })
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    //세션에 원래 가고자했던 자원의 정보가 남아있음
-                    //handle 메소드
-                    response.sendRedirect("/denied");
-                })
-
-                //csrf 필터는 default값이라서 따로 설정하지 않아도 작동함
-                //disable 할때는 지정 필요
-                //.csrf().disable()
         ;
         return http.getOrBuild();
     }
 
-    //UserDetailService 순환참조 에러
-    //AuthenticationManagerBuilder에서 UserDetailService 참조하고 있기 때문에, 이 파일에서는 참조하면 안됨
-    /*@Primary
-    @Bean
-    public AuthenticationManagerBuilder configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        //임시 inMemory 테스트 유저 추가
-        auth.inMemoryAuthentication()
-                .withUser("user").password(passwordEncoder().encode("1111")).roles("USER")
-                .and()
-                .withUser("sys").password(passwordEncoder().encode("1111")).roles("SYS")
-                .and()
-                .withUser("admin").password(passwordEncoder().encode("1111")).roles("ADMIN", "SYS", "USER");
 
-        return auth;
-    }*/
 
 }
