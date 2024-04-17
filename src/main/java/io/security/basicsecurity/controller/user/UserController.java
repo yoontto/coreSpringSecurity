@@ -1,4 +1,4 @@
-package io.security.basicsecurity.controller;
+package io.security.basicsecurity.controller.user;
 
 import io.security.basicsecurity.domain.Account;
 import io.security.basicsecurity.domain.AccountDto;
