@@ -1,14 +1,14 @@
 package io.security.basicsecurity.security.provider;
 
+import io.security.basicsecurity.security.common.FormWebAuthenticationDetails;
 import io.security.basicsecurity.security.service.AccountContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -32,6 +32,13 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         //예외처리!
         if(!passwordEncoder.matches(password, accountContext.getPassword())){
             new BadCredentialsException("BadCredentialsException :: 잘못된 패스워드 접근!!!");
+        }
+        
+        //파라미터로 넣어준 secretKey 없으면 인증 불가
+        FormWebAuthenticationDetails formDetails = (FormWebAuthenticationDetails) authentication.getDetails();
+        String secretKey = formDetails.getSecretKey();
+        if(secretKey == null || !"secret".equals(secretKey)) {
+            throw new InsufficientAuthenticationException("InsufficientAuthenticationException!!");
         }
 
         //3. 가져온 UserDetails 타입 정보로 UsernamePasswordAuthenticationToken 만들기(권한 주기)
