@@ -1,6 +1,7 @@
 package io.security.basicsecurity.security.configs;
 
 import io.security.basicsecurity.repository.UserRepository;
+import io.security.basicsecurity.security.provider.CustomAuthenticationProvider;
 import io.security.basicsecurity.security.service.CustomUserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +31,11 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-
+    //커스텀한 provider 자동으로 처리되도록 Bean등록
+    @Bean
+    public CustomAuthenticationProvider customAuthenticationProvider() {
+        return new CustomAuthenticationProvider();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,7 +45,6 @@ public class SecurityConfig {
 
         http
                 .formLogin(form -> form
-                        .loginPage("/login")
                         .defaultSuccessUrl("/")
                         .failureUrl("/login")
                         //.loginProcessingUrl("/login_proc")
