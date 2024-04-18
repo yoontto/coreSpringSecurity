@@ -1,5 +1,6 @@
 package io.security.basicsecurity.domain;
 
+import io.security.basicsecurity.domain.role.RoleEnum;
 import lombok.Data;
 
 
@@ -12,5 +13,5 @@ public class AccountDto {
     private String password;
     private String email;
     private String age;
-    private String role;
+    private RoleEnum role;
 }

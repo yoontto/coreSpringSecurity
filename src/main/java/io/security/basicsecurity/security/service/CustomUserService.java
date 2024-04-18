@@ -1,5 +1,6 @@
 package io.security.basicsecurity.security.service;
 
+import io.security.basicsecurity.domain.role.RoleEnum;
 import io.security.basicsecurity.domain.Account;
 import io.security.basicsecurity.repository.UserRepository;
 import org.springframework.security.core.GrantedAuthority;
@@ -35,7 +36,11 @@ public class CustomUserService implements UserDetailsService {
 
         //조회한 유저의 권한 정보를 list로 만들어서 넣어준다.
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(account.getRole()));
+
+        if(account.getRole() != null) {
+            RoleEnum role = RoleEnum.valueOf(account.getRole());
+            authorities.add(new SimpleGrantedAuthority(account.getRole()));
+        }
 
         return new AccountContext(account, authorities);
     }
