@@ -1,28 +1,17 @@
 package io.security.basicsecurity.security.configs;
 
-import io.security.basicsecurity.repository.UserRepository;
 import io.security.basicsecurity.security.provider.CustomAuthenticationProvider;
-import io.security.basicsecurity.security.service.CustomUserService;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationFilter;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
-import org.springframework.security.web.savedrequest.RequestCache;
-import org.springframework.security.web.savedrequest.SavedRequest;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -30,9 +19,15 @@ public class SecurityConfig {
 
     //Authentication 객체에 detail값 넣어주기 위해 설정해야 해줘야 함
     private final AuthenticationDetailsSource authenticationDetailsSource;
+
+    //savedRequest 사욯하는 인증 성공 핸들러
+    private AuthenticationSuccessHandler customAuthenticationSuccessHandler;
+
     public SecurityConfig(AuthenticationDetailsSource authenticationDetailsSource) {
         this.authenticationDetailsSource = authenticationDetailsSource;
     }
+
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -62,6 +57,8 @@ public class SecurityConfig {
                         .permitAll()
                         //Authentication 객체에 detail값 넣어주기 위해 설정해야 해줘야 함
                         .authenticationDetailsSource(authenticationDetailsSource)
+                        //커스텀 인증 성공 핸들러
+                        .successHandler(customAuthenticationSuccessHandler)
                 )
 
                 .sessionManagement(session -> session       //동시 세션 제어 기능
