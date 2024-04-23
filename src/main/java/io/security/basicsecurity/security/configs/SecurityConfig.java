@@ -1,5 +1,6 @@
 package io.security.basicsecurity.security.configs;
 
+import io.security.basicsecurity.security.handler.CustomAccessDeniedHandler;
 import io.security.basicsecurity.security.provider.CustomAuthenticationProvider;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -13,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
@@ -28,6 +30,7 @@ public class SecurityConfig {
     
     //인증 실패 핸들러
     private final AuthenticationFailureHandler customAuthenticationFailureHandler;
+
 
     public SecurityConfig(AuthenticationDetailsSource authenticationDetailsSource, AuthenticationSuccessHandler customAuthenticationSuccessHandler, AuthenticationFailureHandler customAuthenticationFailureHandler) {
         this.authenticationDetailsSource = authenticationDetailsSource;
@@ -47,6 +50,15 @@ public class SecurityConfig {
     public CustomAuthenticationProvider customAuthenticationProvider() {
         return new CustomAuthenticationProvider();
     }
+
+    //커스텀한 인가 예외처리 핸들러 Bean등록
+    @Bean
+    public AccessDeniedHandler customAccessDeniedHandler(){
+        CustomAccessDeniedHandler customAccessDeniedHandler = new CustomAccessDeniedHandler();
+        customAccessDeniedHandler.setErrorPage("/denied");
+        return customAccessDeniedHandler;
+    }
+
 
     //정적 파일 무시하는 방법
     @Bean
@@ -76,6 +88,10 @@ public class SecurityConfig {
                         //커스텀 인증 실패 핸들러
                         .failureHandler(customAuthenticationFailureHandler)
                 )
+                .exceptionHandling(exception -> exception
+                        //커스텀한 인가 예외처리 핸들러 지정
+                        .accessDeniedHandler(customAccessDeniedHandler())
+                )
 /*
                 .sessionManagement(session -> session       //동시 세션 제어 기능
                         .maximumSessions(1)                 //최대 세션 허용개수, -1이면 무제한
@@ -103,7 +119,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SYS")     // 더 포괄적인 url이 더 아래쪽으로 위치
                         // 예외처리 예제 확인할 때, 인증 안된 사용자 redirect 할 수 있도록 permitAll 처리함
                         .requestMatchers("/login", "/logout").permitAll()
-                        .requestMatchers("/", "/users", "user/login/**").permitAll()
+                        .requestMatchers("/", "/users", "/denied").permitAll()
                 )
                 
         ;
