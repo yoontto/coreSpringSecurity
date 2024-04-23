@@ -1,15 +1,18 @@
 package io.security.basicsecurity.security.configs;
 
+import io.security.basicsecurity.security.filter.AjaxAuthenticationProcessingFilter;
 import io.security.basicsecurity.security.handler.CustomAccessDeniedHandler;
 import io.security.basicsecurity.security.provider.CustomAuthenticationProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,9 +20,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     //Authentication 객체에 detail값 넣어주기 위해 설정해야 해줘야 함
@@ -31,14 +36,8 @@ public class SecurityConfig {
     //인증 실패 핸들러
     private final AuthenticationFailureHandler customAuthenticationFailureHandler;
 
-
-    public SecurityConfig(AuthenticationDetailsSource authenticationDetailsSource, AuthenticationSuccessHandler customAuthenticationSuccessHandler, AuthenticationFailureHandler customAuthenticationFailureHandler) {
-        this.authenticationDetailsSource = authenticationDetailsSource;
-        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
-        this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
-    }
-
-
+    //Manager 만들기 위해 생성자 주입
+    private final AuthenticationConfiguration authenticationConfiguration;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -58,6 +57,21 @@ public class SecurityConfig {
         customAccessDeniedHandler.setErrorPage("/denied");
         return customAccessDeniedHandler;
     }
+
+    //Ajax 프로세싱 filter 등록하기 위해서 manager 설정해줌
+    //강의는 구버전이라 override 가능했는데, 신버전부터는 bean 등록 직접 해줘야 함
+    @Bean
+    public AuthenticationManager authenticationManager() throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    public AjaxAuthenticationProcessingFilter ajaxAuthenticationProcessingFilter() throws Exception {
+        AjaxAuthenticationProcessingFilter ajaxAuthenticationProcessingFilter = new AjaxAuthenticationProcessingFilter();
+        ajaxAuthenticationProcessingFilter.setAuthenticationManager(authenticationManager());
+        return ajaxAuthenticationProcessingFilter;
+    }
+
 
 
     //정적 파일 무시하는 방법
@@ -92,6 +106,8 @@ public class SecurityConfig {
                         //커스텀한 인가 예외처리 핸들러 지정
                         .accessDeniedHandler(customAccessDeniedHandler())
                 )
+                //Ajax 필터를 Form인증 필터보다 우선으로 두기
+                .addFilterBefore(ajaxAuthenticationProcessingFilter(), UsernamePasswordAuthenticationFilter.class)
 /*
                 .sessionManagement(session -> session       //동시 세션 제어 기능
                         .maximumSessions(1)                 //최대 세션 허용개수, -1이면 무제한
@@ -121,6 +137,8 @@ public class SecurityConfig {
                         .requestMatchers("/login", "/logout").permitAll()
                         .requestMatchers("/", "/users", "/denied").permitAll()
                 )
+                //ajax 테스트 때문에 잠시 꺼두기
+                .csrf().disable()
                 
         ;
         return http.getOrBuild();
