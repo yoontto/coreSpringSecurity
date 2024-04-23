@@ -1,16 +1,19 @@
 package io.security.basicsecurity.security.configs;
 
 import io.security.basicsecurity.security.provider.CustomAuthenticationProvider;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
@@ -21,10 +24,15 @@ public class SecurityConfig {
     private final AuthenticationDetailsSource authenticationDetailsSource;
 
     //savedRequest 사욯하는 인증 성공 핸들러
-    private AuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    private final AuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    
+    //인증 실패 핸들러
+    private final AuthenticationFailureHandler customAuthenticationFailureHandler;
 
-    public SecurityConfig(AuthenticationDetailsSource authenticationDetailsSource) {
+    public SecurityConfig(AuthenticationDetailsSource authenticationDetailsSource, AuthenticationSuccessHandler customAuthenticationSuccessHandler, AuthenticationFailureHandler customAuthenticationFailureHandler) {
         this.authenticationDetailsSource = authenticationDetailsSource;
+        this.customAuthenticationSuccessHandler = customAuthenticationSuccessHandler;
+        this.customAuthenticationFailureHandler = customAuthenticationFailureHandler;
     }
 
 
@@ -40,6 +48,12 @@ public class SecurityConfig {
         return new CustomAuthenticationProvider();
     }
 
+    //정적 파일 무시하는 방법
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers(PathRequest.toStaticResources().atCommonLocations());
+    }
 
 
     @Bean
@@ -59,8 +73,10 @@ public class SecurityConfig {
                         .authenticationDetailsSource(authenticationDetailsSource)
                         //커스텀 인증 성공 핸들러
                         .successHandler(customAuthenticationSuccessHandler)
+                        //커스텀 인증 실패 핸들러
+                        .failureHandler(customAuthenticationFailureHandler)
                 )
-
+/*
                 .sessionManagement(session -> session       //동시 세션 제어 기능
                         .maximumSessions(1)                 //최대 세션 허용개수, -1이면 무제한
                         .maxSessionsPreventsLogin(true)     //true : 나중 사용자 로그인 막기, false : 처음 사용자 세션 종료
@@ -76,8 +92,8 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.NEVER)             //생성하지는 않지만, 이미 존재하면 사용
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)         //  생성하지도 않고, 존재해도 사용안함
                                                                                         //   JWT 인증 방식 사용시 statless로 설정
-                        */
-                )
+
+                )*/
 
                 // 운영 서비스 할 때 적합한 방식은 아님
                 // 즉각적이고 동적 권한 관리는 따로 지정해 줘야 함
@@ -87,7 +103,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SYS")     // 더 포괄적인 url이 더 아래쪽으로 위치
                         // 예외처리 예제 확인할 때, 인증 안된 사용자 redirect 할 수 있도록 permitAll 처리함
                         .requestMatchers("/login", "/logout").permitAll()
-                        .requestMatchers("/", "/users").permitAll()
+                        .requestMatchers("/", "/users", "user/login/**").permitAll()
                 )
                 
         ;

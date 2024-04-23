@@ -29,9 +29,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         //2. 추출한 username으로  UserService를 이용해 DB에서 사용자 정보 가져오기
         AccountContext accountContext = (AccountContext) userDetailsService.loadUserByUsername(username);
 
-        //예외처리!
+        //패스워드 틀렸을 때 예외처리!
         if(!passwordEncoder.matches(password, accountContext.getPassword())){
-            new BadCredentialsException("BadCredentialsException :: 잘못된 패스워드 접근!!!");
+            throw new BadCredentialsException("BadCredentialsException :: 잘못된 패스워드 접근!!!");
         }
         
         //파라미터로 넣어준 secretKey 없으면 인증 불가
