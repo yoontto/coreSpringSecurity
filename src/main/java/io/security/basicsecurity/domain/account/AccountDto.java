@@ -1,7 +1,9 @@
-package io.security.basicsecurity.domain;
+package io.security.basicsecurity.domain.account;
 
 import io.security.basicsecurity.domain.role.RoleEnum;
 import lombok.Data;
+
+import java.util.List;
 
 
 //사용자가 입력한 값을 받아오는 DTO
@@ -13,5 +15,5 @@ public class AccountDto {
     private String password;
     private String email;
     private String age;
-    private RoleEnum role;
+    private List<RoleEnum> roles;
 }

@@ -1,6 +1,6 @@
 package io.security.basicsecurity.service;
 
-import io.security.basicsecurity.domain.Account;
+import io.security.basicsecurity.domain.account.Account;
 
 public interface UserService {
 

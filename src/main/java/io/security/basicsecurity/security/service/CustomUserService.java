@@ -1,7 +1,7 @@
 package io.security.basicsecurity.security.service;
 
 import io.security.basicsecurity.domain.role.RoleEnum;
-import io.security.basicsecurity.domain.Account;
+import io.security.basicsecurity.domain.account.Account;
 import io.security.basicsecurity.repository.UserRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,7 +29,6 @@ public class CustomUserService implements UserDetailsService {
         //유저 계정 조회
         Account account = userRepository.findByUsername(username);
 
-        System.out.println("나 되고 있어!!!!!!");
         if (account == null) {
             throw new UsernameNotFoundException("UsernameNotFoundException :: " + username);
         }
@@ -37,10 +36,10 @@ public class CustomUserService implements UserDetailsService {
         //조회한 유저의 권한 정보를 list로 만들어서 넣어준다.
         List<GrantedAuthority> authorities = new ArrayList<>();
 
-        if(account.getRole() != null) {
-            RoleEnum role = RoleEnum.valueOf(account.getRole());
-            authorities.add(new SimpleGrantedAuthority(account.getRole()));
-        }
+//        if(account.getRole() != null) {
+//            RoleEnum role = RoleEnum.valueOf(account.getRole());
+//            authorities.add(new SimpleGrantedAuthority(role.name()));
+//        }
 
         return new AccountContext(account, authorities);
     }
